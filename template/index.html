@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Minhas Contas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Fonte -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fa-solid fa-wallet"></i>
+            <span>Planeja</span>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a class="menu-item active">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-credit-card"></i>
+                <span>Cartões</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-tags"></i>
+                <span>Categorias</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-receipt"></i>
+                <span>Lançamentos</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Planejamento</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Relatórios</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Conteúdo principal -->
+    <div class="main-content">
+
+        <!-- Header -->
+        <header class="header">
+            <h1>Cadastro de Cartões</h1>
+
+            <div class="user-area">
+                <span class="user-name">Olá, Usuário</span>
+                <i class="fa-solid fa-circle-user"></i>
+            </div>
+        </header>
+
+        <!-- Conteúdo -->
+        <main class="content">
+            <div class="card">
+                <h2>Novo Cartão</h2>
+
+                <form class="form">
+                    <div class="form-group">
+                        <label for="nome">Nome do Cartão</label>
+                        <input type="text" id="nome" placeholder="Ex: Nubank">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bandeira">Bandeira</label>
+                        <select id="bandeira">
+                            <option>Selecione</option>
+                            <option>Visa</option>
+                            <option>Mastercard</option>
+                            <option>American Express</option>
+                        </select>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Salvar</button>
+                        <button type="button" class="btn-secondary">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+    </div>
+
+</div>
+
+</body>
+</html>

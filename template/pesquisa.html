@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Minhas Contas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Fonte -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fa-solid fa-wallet"></i>
+            <span>Planeja</span>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a class="menu-item active">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-credit-card"></i>
+                <span>Cartões</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-tags"></i>
+                <span>Categorias</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-receipt"></i>
+                <span>Lançamentos</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Planejamento</span>
+            </a>
+            <a class="menu-item">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Relatórios</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Conteúdo principal -->
+    <div class="main-content">
+
+        <!-- Header -->
+        <header class="header">
+            <h1>Cadastro de Cartões</h1>
+
+            <div class="user-area">
+                <span class="user-name">Olá, Usuário</span>
+                <i class="fa-solid fa-circle-user"></i>
+            </div>
+        </header>
+
+        <!-- Conteúdo -->
+        <main class="content">
+            <div class="card-full">
+                <h2>Meus Cartões</h2>
+
+                 <!-- Tabela -->
+                <div class="table-card">
+
+                    <table class="datatable">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Bandeira</th>
+                                <th>Limite</th>
+                                <th>Disponível</th>
+                                <th>Fechamento</th>
+                                <th>Status</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>Nubank Platinum</td>
+                                <td>Visa</td>
+                                <td>R$ 8.000,00</td>
+                                <td class="text-success">R$ 2.350,00</td>
+                                <td>Dia 10</td>
+                                <td>
+                                    <span class="badge badge-success">Ativo</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="icon-btn">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button class="icon-btn danger">
+                                        <i class="fa-solid fa-ban"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>Inter Gold</td>
+                                <td>Mastercard</td>
+                                <td>R$ 5.000,00</td>
+                                <td>—</td>
+                                <td>Dia 5</td>
+                                <td>
+                                    <span class="badge badge-warning">Inativo</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="icon-btn">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Paginação -->
+                    <div class="table-footer">
+                        <span>Mostrando 1–10 de 42 registros</span>
+
+                        <div class="pagination">
+                            <button class="page-btn disabled">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+</div>
+
+</body>
+</html>
