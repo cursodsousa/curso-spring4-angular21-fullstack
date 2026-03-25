@@ -1,0 +1,9 @@
+2026-03-25 08:41:23.904136-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "delete [*]* from cartao where data_cadastro > '2026-03-15 16:06:40.153816'"; expected "identifier"; SQL statement:
+delete * from cartao where data_cadastro > '2026-03-15 16:06:40.153816' [42001-240]
+2026-03-25 08:41:43.279194-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "delete [*]* from cartao where data_cadastro > to_date('2026-03-15 16:06:40.153816')"; expected "identifier"; SQL statement:
+delete * from cartao where data_cadastro > to_date('2026-03-15 16:06:40.153816') [42001-240]
+2026-03-25 08:42:11.112978-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "delete [*]* from cartao where data_cadastro > to_date('2026-03-15', 'YYYY-MM-DD')"; expected "identifier"; SQL statement:
+delete * from cartao where data_cadastro > to_date('2026-03-15', 'YYYY-MM-DD') [42001-240]
