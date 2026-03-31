@@ -1,0 +1,54 @@
+<header class="header">
+    <h1>Meus Cartões</h1>
+
+    <div class="user-area">
+        <span class="user-name">Olá, Usuário</span>
+        <i class="fa-solid fa-circle-user"></i>
+    </div>
+</header>
+
+<main class="content">
+    <div class="card-full">
+        <div class="table-card">
+
+            @if (listagem$ | async; as listagem) {
+                <table class="datatable">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Bandeira</th>
+                            <th>Status</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @for( cartao of listagem.content; track cartao.id ){
+                            <tr>
+                                <td> {{ cartao.nome }} </td>
+                                <td> {{ cartao.bandeira }} </td>
+                                <td>
+                                    <span class="badge badge-warning">
+                                        Inativo
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="icon-btn">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+
+                                    <button class="icon-btn danger">
+                                        <i class="fa-solid fa-ban"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+
+                    </tbody>
+                </table>
+            }
+
+        </div>
+    </div>
+</main>

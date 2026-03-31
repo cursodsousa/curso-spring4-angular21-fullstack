@@ -4,6 +4,8 @@ import io.github.ds.planeja.dominio.cartao.dto.CartaoDetalhes;
 import io.github.ds.planeja.dominio.cartao.dto.CartaoForm;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +39,15 @@ public class CartaoController {
             @PathVariable UUID id, @RequestBody CartaoForm dadosAtualizacao){
         service.atualizar(id, dadosAtualizacao);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    public Page<CartaoDetalhes> listar(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ){
+        var pageRequest = PageRequest.of(page, size);
+        return service.listar(pageRequest);
     }
 
 }

@@ -2,15 +2,21 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DadosCartaoForm, DetalhesCartao } from './dados-cartao'
 import { Observable } from 'rxjs';
+import { PageResult } from '../common/pagination/page-result';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CartaoService {
   http = inject(HttpClient);
+  baseUrl = 'http://localhost:8080/cartoes';
 
   criar(dados: DadosCartaoForm) : Observable<DetalhesCartao> {
-    const url = 'http://localhost:8080/cartoes'
-    return this.http.post<DetalhesCartao>(url, dados);
+    return this.http.post<DetalhesCartao>(this.baseUrl, dados);
+  }
+
+  listar(page: number = 0, size: number = 10) : Observable<PageResult<DetalhesCartao>> {
+    const url = `${this.baseUrl}?page=${page}&size=${size}`;
+    return this.http.get<PageResult<DetalhesCartao>>(url);
   }
 }
