@@ -59,8 +59,12 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn-primary">Salvar</button>
-                <button type="button" class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-primary">
+                    {{ idCartaoEdicao ? 'Atualizar' : 'Salvar' }}
+                </button>
+                <button type="button" class="btn-secondary" 
+                        [routerLink]="['/paginas/listagem-cartoes']">Cancelar
+                </button>
             </div>
         </form>
 

@@ -5,16 +5,18 @@ import { PageResult } from '../../common/pagination/page-result';
 import { DetalhesCartao } from '../dados-cartao';
 import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-listagem-cartoes',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './listagem-cartoes.html',
   styleUrl: './listagem-cartoes.scss',
 })
 export class ListagemCartoes implements OnInit {
 
   service = inject(CartaoService);
+  router = inject(Router);
   toast = inject(ToastrService);
   listagem$!: Observable<PageResult<DetalhesCartao>>;
   paginaAtual = 0;
@@ -39,5 +41,9 @@ export class ListagemCartoes implements OnInit {
         this.toast.success('Registro atualizado com sucesso!');
         this.listarCartoes();
       })
+  }
+
+  prepararEdicao(idCartao: string){
+    this.router.navigate(['/paginas/cadastro-cartoes'], { queryParams: { id: idCartao} })
   }
 }
