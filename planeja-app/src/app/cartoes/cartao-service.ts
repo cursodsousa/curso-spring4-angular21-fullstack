@@ -8,6 +8,7 @@ import { PageResult } from '../common/pagination/page-result';
   providedIn: 'root',
 })
 export class CartaoService {
+  
   http = inject(HttpClient);
   baseUrl = 'http://localhost:8080/cartoes';
 
@@ -18,5 +19,9 @@ export class CartaoService {
   listar(page: number = 0, size: number = 10) : Observable<PageResult<DetalhesCartao>> {
     const url = `${this.baseUrl}?page=${page}&size=${size}`;
     return this.http.get<PageResult<DetalhesCartao>>(url);
+  }
+
+  mudarStatus(idCartao: string) : Observable<void>{
+    return this.http.patch<void>(`${this.baseUrl}/${idCartao}/status`, null);
   }
 }

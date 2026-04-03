@@ -50,4 +50,10 @@ public class CartaoController {
         return service.listar(pageRequest);
     }
 
+    @PatchMapping("{id}/status")
+    public ResponseEntity<Void> mudarStatus(@PathVariable UUID id){
+        service.mudarStatus(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }

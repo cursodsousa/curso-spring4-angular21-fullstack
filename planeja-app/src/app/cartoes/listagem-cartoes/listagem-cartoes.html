@@ -29,18 +29,24 @@
                                 <td> {{ cartao.nome }} </td>
                                 <td> {{ cartao.bandeira }} </td>
                                 <td>
-                                    <span class="badge badge-warning">
-                                        Inativo
+                                    <span class="badge" [ngClass]="cartao.ativo ? 'badge-success' : 'badge-warning'">
+                                        {{ cartao.ativo ? 'Ativo' : 'Inativo' }}
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <button class="icon-btn">
+                                    <button class="icon-btn" title="Editar">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
 
-                                    <button class="icon-btn danger">
-                                        <i class="fa-solid fa-ban"></i>
+                                    <button class="icon-btn"
+                                            [attr.title]="cartao.ativo ? 'Desativar cartão' : 'Ativar cartão'"
+                                            [ngClass]="cartao.ativo ? 'danger' : 'success'" 
+                                            (click)="mudarStatus(cartao.id)">
+                                        <i class="fa-solid" 
+                                           [ngClass]="cartao.ativo? 'fa-ban' : 'fa-check'">
+                                        </i>
                                     </button>
+
                                 </td>
                             </tr>
                         }
