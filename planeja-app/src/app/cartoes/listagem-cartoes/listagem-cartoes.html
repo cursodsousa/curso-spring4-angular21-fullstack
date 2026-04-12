@@ -54,6 +54,36 @@
 
                     </tbody>
                 </table>
+
+                <div class="table-footer">
+                    <span>
+                        Mostrando {{ inicioRegistro(listagem) }}–{{ fimRegistro(listagem) }}
+                        de {{ listagem.totalElements }} registros
+                    </span>
+
+                    <div class="pagination">
+                        <button class="page-btn"
+                                [class.disabled]="listagem.first"
+                                [disabled]="listagem.first"
+                                (click)="navegarAnterior(listagem)">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        @for (pagina of paginas(listagem.totalPages); track pagina) {
+                            <button class="page-btn"
+                                    [class.active]="pagina === listagem.number"
+                                    (click)="navegar(pagina)">
+                                {{ pagina + 1 }}
+                            </button>
+                        }
+                        <button class="page-btn"
+                                [class.disabled]="listagem.last"
+                                [disabled]="listagem.last"
+                                (click)="navegarProximo(listagem)">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
             }
 
         </div>

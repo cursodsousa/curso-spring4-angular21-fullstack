@@ -35,6 +35,38 @@ export class ListagemCartoes implements OnInit {
     this.listarCartoes();
   }
 
+  navegarAnterior(listagem: PageResult<DetalhesCartao>){
+    if (!listagem.first) {
+      this.navegar(listagem.number - 1);
+    }
+  }
+
+  navegarProximo(listagem: PageResult<DetalhesCartao>){
+    if (!listagem.last) {
+      this.navegar(listagem.number + 1);
+    }
+  }
+
+  paginas(totalPages: number): number[] {
+    return Array.from({ length: totalPages }, (_, index) => index);
+  }
+
+  inicioRegistro(listagem: PageResult<DetalhesCartao>): number {
+    if (listagem.totalElements === 0) {
+      return 0;
+    }
+
+    return (listagem.number * listagem.size) + 1;
+  }
+
+  fimRegistro(listagem: PageResult<DetalhesCartao>): number {
+    if (listagem.totalElements === 0) {
+      return 0;
+    }
+
+    return Math.min((listagem.number + 1) * listagem.size, listagem.totalElements);
+  }
+
   mudarStatus(idCartao: string){
     this.service.mudarStatus(idCartao)
       .subscribe(next => {
