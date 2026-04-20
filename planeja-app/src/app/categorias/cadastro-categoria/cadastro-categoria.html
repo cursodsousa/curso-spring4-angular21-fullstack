@@ -1,0 +1,49 @@
+<header class="header">
+    <h1>Cadastro de Categorias</h1>
+
+    <div class="user-area">
+        <span class="user-name">Olá, Usuário</span>
+        <i class="fa-solid fa-circle-user"></i>
+    </div>
+</header>
+
+<main class="content">
+    <div class="card">
+        <h2>Nova Categoria</h2>
+
+        <form [formGroup]="form" (ngSubmit)="handleSubmit()" class="form">
+            <div class="form-group">
+                <label for="descricao">Descrição: *</label>
+                <input formControlName="descricao"
+                       type="text"
+                       id="descricao"
+                       name="descricao"
+                       placeholder="Ex: Alimentação" />
+
+                @if(form.controls.descricao.hasError('required') && form.controls.descricao.touched){
+                    <span class="form-hint form-hint-error">
+                        A descrição da categoria é obrigatória.
+                    </span>
+                }
+
+                @if(form.controls.descricao.hasError('apiError') && form.controls.descricao.touched){
+                    <span class="form-hint form-hint-error">
+                        {{ form.get('descricao')?.errors?.['apiError']  }}
+                    </span>
+                }
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    Salvar
+                </button>
+                <button type="button"
+                        class="btn-secondary"
+                        [routerLink]="['/paginas/listagem-categorias']">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+
+    </div>
+</main>
