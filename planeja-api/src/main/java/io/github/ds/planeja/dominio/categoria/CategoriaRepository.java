@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface CategoriaRepository extends JpaRepository<CategoriaEntity, UUID> {
 
     boolean existsByNome(String nome);
+
+    java.util.List<CategoriaEntity> findByAtivoTrue();
 }

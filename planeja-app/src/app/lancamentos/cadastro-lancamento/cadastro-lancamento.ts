@@ -7,9 +7,7 @@ import { forkJoin } from 'rxjs';
 import { NgxMaskDirective } from 'ngx-mask';
 import { Header } from '../../common/components/header/header';
 import { ValidationErrorResponse } from '../../common/validation/validation-error-model';
-import { CategoriaService } from '../../categorias/categoria-service';
 import { DetalhesCategoria } from '../../categorias/dados-categoria';
-import { CartaoService } from '../../cartoes/cartao-service';
 import { DetalhesCartao } from '../../cartoes/dados-cartao';
 import { DadosLancamentoForm, TipoLancamento } from '../dados-lancamento';
 import { LancamentoService } from '../lancamento-service';
@@ -32,8 +30,6 @@ export class CadastroLancamento implements OnInit {
   form!: FormGroup<CadastroLancamentoForm>;
   toast = inject(ToastrService);
   lancamentoService = inject(LancamentoService);
-  categoriaService = inject(CategoriaService);
-  cartaoService = inject(CartaoService);
 
   categoriasAtivas: DetalhesCategoria[] = [];
   cartoesAtivos: DetalhesCartao[] = [];
@@ -52,12 +48,12 @@ export class CadastroLancamento implements OnInit {
 
   carregarDropdowns(): void {
     forkJoin({
-      categorias: this.categoriaService.listar(0, 200),
-      cartoes: this.cartaoService.listar(0, 200),
+      categorias: this.lancamentoService.listarCategoriasDisponiveis(),
+      cartoes: this.lancamentoService.listarCartoesDisponiveis(),
     }).subscribe({
       next: ({ categorias, cartoes }) => {
-        this.categoriasAtivas = categorias.content.filter((c) => c.ativo);
-        this.cartoesAtivos = cartoes.content.filter((c) => c.ativo);
+        this.categoriasAtivas = categorias;
+        this.cartoesAtivos = cartoes;
       },
       error: () => this.toast.error('Erro ao carregar categorias e cartoes.'),
     });
