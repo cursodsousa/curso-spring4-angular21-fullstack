@@ -1,0 +1,22 @@
+
+.filtros-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 12px;
+    align-items: end;
+}
+
+.filtro-col {
+    grid-column: span 4;
+}
+
+.filtros-actions {
+    margin-top: 6px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .filtro-col {
+        grid-column: span 12;
+    }
+}

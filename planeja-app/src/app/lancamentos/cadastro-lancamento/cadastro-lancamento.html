@@ -1,0 +1,88 @@
+<app-header titulo="Cadastro de Lancamentos"></app-header>
+
+<main class="content">
+    <div class="card">
+        <h2>Novo Lancamento</h2>
+
+        <form [formGroup]="form" (ngSubmit)="handleSubmit()" class="form">
+            <div class="form-group">
+                <label for="tipo">Tipo: *</label>
+                <select id="tipo" formControlName="tipo" (change)="handleTipoChange()">
+                    <option value="">Selecione...</option>
+                    <option value="RECEITA">Receita</option>
+                    <option value="DESPESA">Despesa</option>
+                </select>
+                @if(form.controls.tipo.hasError('required') && form.controls.tipo.touched){
+                    <span class="form-hint form-hint-error">O tipo é obrigatório.</span>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="categoriaId">Categoria: *</label>
+                <select id="categoriaId" formControlName="categoriaId">
+                    <option value="">Selecione...</option>
+                    @for(categoria of categoriasAtivas; track categoria.id){
+                        <option [value]="categoria.id">{{ categoria.nome }}</option>
+                    }
+                </select>
+                @if(form.controls.categoriaId.hasError('required') && form.controls.categoriaId.touched){
+                    <span class="form-hint form-hint-error">A categoria é obrigatória.</span>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="data">Data: *</label>
+                <input id="data" type="date" formControlName="data" />
+                @if(form.controls.data.hasError('required') && form.controls.data.touched){
+                    <span class="form-hint form-hint-error">A data é obrigatória.</span>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="valor">Valor: *</label>
+                <input id="valor"
+                       type="text"
+                       formControlName="valor"
+                       mask="separator.2"
+                       thousandSeparator="."
+                       decimalMarker="," />
+                @if(form.controls.valor.hasError('required') && form.controls.valor.touched){
+                    <span class="form-hint form-hint-error">O valor é obrigatório.</span>
+                }
+                @if(form.controls.valor.hasError('min') && form.controls.valor.touched){
+                    <span class="form-hint form-hint-error">O valor deve ser maior que zero.</span>
+                }
+            </div>
+
+            @if(isDespesa()){
+                <div class="form-group">
+                    <label for="cartaoId">Cartao:</label>
+                    <select id="cartaoId" formControlName="cartaoId">
+                        <option value="">Selecione...</option>
+                        @for(cartao of cartoesAtivos; track cartao.id){
+                            <option [value]="cartao.id">{{ cartao.nome }}</option>
+                        }
+                    </select>
+                </div>
+            }
+
+            @if(form.controls.categoriaId.hasError('apiError') && form.controls.categoriaId.touched){
+                <span class="form-hint form-hint-error">
+                    {{ form.get('categoriaId')?.errors?.['apiError'] }}
+                </span>
+            }
+            @if(form.controls.cartaoId.hasError('apiError') && form.controls.cartaoId.touched){
+                <span class="form-hint form-hint-error">
+                    {{ form.get('cartaoId')?.errors?.['apiError'] }}
+                </span>
+            }
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Salvar</button>
+                <button type="button" class="btn-secondary" [routerLink]="['/paginas/listagem-lancamentos']">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</main>

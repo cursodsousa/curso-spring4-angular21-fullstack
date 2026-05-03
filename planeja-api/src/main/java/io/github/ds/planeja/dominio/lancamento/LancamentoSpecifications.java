@@ -2,8 +2,11 @@ package io.github.ds.planeja.dominio.lancamento;
 
 import io.github.ds.planeja.dominio.lancamento.model.LancamentoEntity;
 import io.github.ds.planeja.dominio.lancamento.model.TipoLancamento;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.time.YearMonth;
 import java.util.UUID;
 
@@ -14,23 +17,23 @@ public class LancamentoSpecifications {
 
     public static Specification<LancamentoEntity> porFiltros(YearMonth mes, TipoLancamento tipo, UUID categoriaId) {
         return (root, query, cb) -> {
-            var predicates = cb.conjunction();
+            List<Predicate> predicates = new ArrayList<>();
 
             if (mes != null) {
                 var inicioMes = mes.atDay(1);
                 var fimMes = mes.atEndOfMonth();
-                predicates.getExpressions().add(cb.between(root.get("data"), inicioMes, fimMes));
+                predicates.add(cb.between(root.get("data"), inicioMes, fimMes));
             }
 
             if (tipo != null) {
-                predicates.getExpressions().add(cb.equal(root.get("tipo"), tipo));
+                predicates.add(cb.equal(root.get("tipo"), tipo));
             }
 
             if (categoriaId != null) {
-                predicates.getExpressions().add(cb.equal(root.get("categoria").get("id"), categoriaId));
+                predicates.add(cb.equal(root.get("categoria").get("id"), categoriaId));
             }
 
-            return predicates;
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 }
