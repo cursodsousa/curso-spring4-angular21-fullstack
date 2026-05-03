@@ -1,48 +1,48 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CartaoService } from '../cartao-service';
+import { CategoriaService } from '../categoria-service';
 import { Observable } from 'rxjs';
 import { PageResult } from '../../common/pagination/page-result';
-import { DetalhesCartao } from '../dados-cartao';
+import { DetalhesCategoria } from '../dados-categoria';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Header } from '../../common/components/header/header';
 
 @Component({
-  selector: 'app-listagem-cartoes',
+  selector: 'app-listagem-categorias',
   imports: [CommonModule, RouterLink, Header],
-  templateUrl: './listagem-cartoes.html',
-  styleUrl: './listagem-cartoes.scss',
+  templateUrl: './listagem-categorias.html',
+  styleUrl: './listagem-categorias.scss',
 })
-export class ListagemCartoes implements OnInit {
+export class ListagemCategorias implements OnInit {
 
-  service = inject(CartaoService);
+  service = inject(CategoriaService);
   router = inject(Router);
   toast = inject(ToastrService);
-  listagem$!: Observable<PageResult<DetalhesCartao>>;
+  listagem$!: Observable<PageResult<DetalhesCategoria>>;
   paginaAtual = 0;
   tamanhoPagina = 5;
 
   ngOnInit(): void {
-    this.listarCartoes();
+    this.listarCategorias();
   }
 
-  listarCartoes(){
+  listarCategorias(){
     this.listagem$ = this.service.listar(this.paginaAtual, this.tamanhoPagina);
   }
 
   navegar(pagina: number){
     this.paginaAtual = pagina;
-    this.listarCartoes();
+    this.listarCategorias();
   }
 
-  navegarProximo(listagem: PageResult<DetalhesCartao>){
+  navegarProximo(listagem: PageResult<DetalhesCategoria>){
     if(!listagem.last){
       this.navegar(listagem.number + 1);
     }
   }
 
-  navegarAnterior(listagem: PageResult<DetalhesCartao>){
+  navegarAnterior(listagem: PageResult<DetalhesCategoria>){
     if(!listagem.first){
       this.navegar(listagem.number - 1);
     }
@@ -52,7 +52,7 @@ export class ListagemCartoes implements OnInit {
     return Array.from({ length: totalPages }, (valor, index) => index );
   }
 
-  registroInicial(listagem: PageResult<DetalhesCartao>){
+  registroInicial(listagem: PageResult<DetalhesCategoria>){
     if(listagem.totalElements === 0){
       return 0;
     }
@@ -60,7 +60,7 @@ export class ListagemCartoes implements OnInit {
     return (listagem.number * listagem.size) + 1;
   }
 
-  registroFinal(listagem: PageResult<DetalhesCartao>){
+  registroFinal(listagem: PageResult<DetalhesCategoria>){
     if(listagem.totalElements === 0){
       return 0;
     }
@@ -68,19 +68,11 @@ export class ListagemCartoes implements OnInit {
     return Math.min( (listagem.number + 1) * listagem.size, listagem.totalElements );
   }
 
-  prepararEdicao(idCartao: string){
-    this.router.navigate(['/paginas/cadastro-cartoes'], {
-      queryParams: {
-        id: idCartao
-      }
-    });
-  }
-
   mudarStatus(idCartao: string){
     this.service.mudarStatus(idCartao)
       .subscribe(next => {
         this.toast.success('Registro atualizado com sucesso!');
-        this.listarCartoes();
+        this.listarCategorias();
       });
   }
 }

@@ -1,0 +1,44 @@
+<app-header titulo="Cadastro de Categorias"></app-header>
+
+<main class="content">
+    <div class="card">
+        <h2>Nova Categoria</h2>
+
+        <form [formGroup]="form" (ngSubmit)="handleSubmit()" class="form">
+            <div class="form-group">
+                <label for="nome">Nome da Categoria: *</label>
+                <input formControlName="nome" 
+                       type="text" 
+                       id="nome" 
+                       name="nome" 
+                       placeholder="Ex: Alimentação" />
+
+                @if(form.controls.nome.hasError('required') && form.controls.nome.touched){
+                    <span class="form-hint form-hint-error">
+                        O nome da categoria é obrigatório.
+                    </span>
+                }
+
+                @if(form.controls.nome.hasError('apiError') && form.controls.nome.touched){
+                    <span class="form-hint form-hint-error">
+                        {{ form.get('nome')?.errors?.['apiError']  }}
+                    </span>
+                }
+
+            </div>
+            
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    Salvar
+                </button>
+                <button type="button" 
+                        class="btn-secondary" 
+                        [routerLink]="['/paginas/listagem-categorias']">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+
+    </div>
+</main>

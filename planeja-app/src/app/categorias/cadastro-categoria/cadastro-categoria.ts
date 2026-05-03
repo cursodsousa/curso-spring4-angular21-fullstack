@@ -1,65 +1,40 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { CartaoService } from '../cartao-service';
-import { DadosCartaoForm, DetalhesCartao } from '../dados-cartao';
+import { CategoriaService } from '../categoria-service';
+import { DadosCategoriaForm } from '../dados-categoria';
 import { ValidationErrorResponse } from '../../common/validation/validation-error-model';
 import { CommonModule } from '@angular/common';
 import { ToastrService } from 'ngx-toastr';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable } from 'rxjs';
 import { Header } from '../../common/components/header/header';
 
-interface CadastroCartaoForm {
+interface CadastroCategoriaForm {
   nome: FormControl<string>;
-  bandeira: FormControl<string>;
 }
 
 @Component({
-  selector: 'app-cadastro-cartao',
+  selector: 'app-cadastro-categoria',
   imports: [
     ReactiveFormsModule, 
     CommonModule, 
     RouterModule,
     Header
   ],
-  templateUrl: './cadastro-cartao.html',
-  styleUrl: './cadastro-cartao.scss',
+  templateUrl: './cadastro-categoria.html',
+  styleUrl: './cadastro-categoria.scss',
 })
-export class CadastroCartao implements OnInit {
+export class CadastroCategoria implements OnInit {
 
-  form!: FormGroup<CadastroCartaoForm>;
+  form!: FormGroup<CadastroCategoriaForm>;
   rotaAtiva = inject(ActivatedRoute);
-  service = inject(CartaoService);
+  service = inject(CategoriaService);
   toast = inject(ToastrService);
   idCartaoEdicao?: string | null;
 
   ngOnInit(): void {
-    this.form = new FormGroup<CadastroCartaoForm>({
+    this.form = new FormGroup<CadastroCategoriaForm>({
       nome: new FormControl('', { nonNullable: true, validators: Validators.required }),
-      bandeira: new FormControl('', { nonNullable: true, validators: Validators.required })
     });
-
-    this.carregarDadosParaEdicao();
-  }
-
-  carregarDadosParaEdicao(){
-    this.idCartaoEdicao = this.rotaAtiva.snapshot.queryParamMap.get('id');
-
-    if(!this.idCartaoEdicao){
-      return;
-    }
-
-    this.service
-      .obterPorId(this.idCartaoEdicao)
-      .subscribe({
-        next: (cartao) => {
-          this.form.patchValue({
-            nome: cartao.nome,
-            bandeira: cartao.bandeira
-          })
-        },
-        error: () => this.toast.error('Erro ao carregar dados do cartão')
-      });
   }
 
   isFormInvalid() : boolean {
@@ -76,17 +51,12 @@ export class CadastroCartao implements OnInit {
       return;
     }
 
-    const dadosCartao = this.form.value as DadosCartaoForm;
+    const dadosCategoria = this.form.value as DadosCategoriaForm;
 
-    const requisicao: Observable<DetalhesCartao | void> = this.idCartaoEdicao ?
-          this.service.atualizar(this.idCartaoEdicao, dadosCartao) :
-          this.service.criar(dadosCartao); 
-
-
-    requisicao
+    this.service.criar(dadosCategoria)
         .subscribe({
           next: (response) => {
-            this.toast.success('Cartão cadastrado/atualizado com sucesso!');
+            this.toast.success('Categoria cadastrada com sucesso!');
             this.form.reset();
             this.idCartaoEdicao = null;
           },
