@@ -26,6 +26,9 @@ public class LancamentoEntity {
     private CategoriaEntity categoria;
 
     @Column(nullable = false)
+    private String descricao;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TipoLancamento tipo;
 
