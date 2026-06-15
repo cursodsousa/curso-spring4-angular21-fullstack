@@ -16,7 +16,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("lancamentos")
-@CrossOrigin("*")
 public class CadastroLancamentoController {
 
     @Autowired
