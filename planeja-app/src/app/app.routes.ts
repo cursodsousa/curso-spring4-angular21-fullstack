@@ -6,16 +6,23 @@ import { ListagemCategorias } from './categorias/listagem-categorias/listagem-ca
 import { CadastroCategoria } from './categorias/cadastro-categoria/cadastro-categoria';
 import { CadastroLancamento } from './lancamentos/cadastro-lancamento/cadastro-lancamento';
 import { Dashboard } from './dashboard/dashboard';
+import { Login } from './auth/login/login';
+import { authGuard } from './auth/auth-guard';
 
 export const routes: Routes = [
     {
         path: '',
-        redirectTo: 'paginas/dashboard',
+        redirectTo: 'login',
         pathMatch: 'full'
+    },
+    {
+        path: 'login',
+        component: Login
     },
     {
         path: 'paginas',
         component: Template,
+        canActivate: [authGuard],
         children: [
             {
                 path: '',

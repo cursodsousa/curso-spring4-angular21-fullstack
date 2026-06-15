@@ -1,6 +1,7 @@
 package io.github.ds.planeja.infra.handlers;
 
 import io.github.ds.planeja.common.exceptions.RegistroNaoEncontradoException;
+import io.github.ds.planeja.common.exceptions.UnauthorizedException;
 import io.github.ds.planeja.common.exceptions.ValidationException;
 import io.github.ds.planeja.common.validation.CampoInvalido;
 import org.springframework.http.HttpStatus;
@@ -62,5 +63,16 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<?> handleUnauthorizedException(UnauthorizedException e){
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of(
+                        "timestamp", LocalDateTime.now(),
+                        "status", HttpStatus.UNAUTHORIZED.value(),
+                        "error", e.getMessage(),
+                        "message", e.getMessage()
+                ));
+    }
 
 }

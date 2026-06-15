@@ -19,5 +19,8 @@ spring:
       enabled: true
       path: /h2-console
 
-
+planeja:
+  jwt:
+    secret: planeja-api-dev-secret-change-me
+    expiration-seconds: 3600
 

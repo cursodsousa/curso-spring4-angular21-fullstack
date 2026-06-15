@@ -1,0 +1,60 @@
+<main class="auth-page">
+    <section class="auth-panel">
+        <div class="brand">
+            <i class="fa-solid fa-wallet"></i>
+            <span>Planeja</span>
+        </div>
+
+        <div class="mode-switch">
+            <button type="button"
+                    [class.active]="modo === 'login'"
+                    (click)="alterarModo('login')">
+                Login
+            </button>
+            <button type="button"
+                    [class.active]="modo === 'cadastro'"
+                    (click)="alterarModo('cadastro')">
+                Cadastro
+            </button>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="handleSubmit()" class="auth-form">
+            @if (modo === 'cadastro') {
+                <div class="form-group">
+                    <label for="nome">Nome do usuário</label>
+                    <input id="nome" type="text" formControlName="nome" autocomplete="name">
+
+                    @if (form.controls.nome.hasError('required') && form.controls.nome.touched) {
+                        <span class="form-hint form-hint-error">Informe o nome do usuário.</span>
+                    }
+                </div>
+            }
+
+            <div class="form-group">
+                <label for="login">Login</label>
+                <input id="login" type="text" formControlName="login" autocomplete="username">
+
+                @if (form.controls.login.hasError('required') && form.controls.login.touched) {
+                    <span class="form-hint form-hint-error">Informe o login.</span>
+                }
+            </div>
+
+            <div class="form-group">
+                <label for="senha">Senha</label>
+                <input id="senha" type="password" formControlName="senha" autocomplete="current-password">
+
+                @if (form.controls.senha.hasError('required') && form.controls.senha.touched) {
+                    <span class="form-hint form-hint-error">Informe a senha.</span>
+                }
+
+                @if (form.controls.senha.hasError('minlength') && form.controls.senha.touched) {
+                    <span class="form-hint form-hint-error">A senha deve ter pelo menos 6 caracteres.</span>
+                }
+            </div>
+
+            <button type="submit" class="btn-primary auth-submit">
+                {{ modo === 'login' ? 'Entrar' : 'Cadastrar' }}
+            </button>
+        </form>
+    </section>
+</main>
