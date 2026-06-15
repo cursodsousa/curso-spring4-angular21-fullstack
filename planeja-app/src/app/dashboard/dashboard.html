@@ -1,0 +1,92 @@
+<app-header titulo="Dashboard"></app-header>
+
+<main class="content">
+    @if (dashboard$ | async; as dashboard) {
+        <section class="dashboard-grid">
+            <div class="metric-card metric-card-balance">
+                <span class="metric-label">Saldo atual</span>
+                <strong [ngClass]="dashboard.resumo.saldo >= 0 ? 'metric-positive' : 'metric-negative'">
+                    {{ formatarMoeda(dashboard.resumo.saldo) }}
+                </strong>
+                <small>{{ formatarMes(dashboard.mes) }}</small>
+            </div>
+
+            <div class="metric-card">
+                <span class="metric-label">Receitas</span>
+                <strong class="metric-positive">{{ formatarMoeda(dashboard.resumo.receitas) }}</strong>
+                <small>Mês atual</small>
+            </div>
+
+            <div class="metric-card">
+                <span class="metric-label">Despesas</span>
+                <strong class="metric-negative">{{ formatarMoeda(dashboard.resumo.despesas) }}</strong>
+                <small>Mês atual</small>
+            </div>
+        </section>
+
+        <section class="charts-grid">
+            <div class="chart-panel">
+                <div class="chart-header">
+                    <h2>Receitas x Despesas</h2>
+                    <span>{{ formatarMes(dashboard.mes) }}</span>
+                </div>
+
+                <div class="comparison-chart">
+                    <div class="comparison-row">
+                        <div class="comparison-label">
+                            <span>Receitas</span>
+                            <strong>{{ formatarMoeda(dashboard.resumo.receitas) }}</strong>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill income"
+                                [style.width.%]="percentual(dashboard.resumo.receitas, dashboard.resumo.receitas + dashboard.resumo.despesas)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-label">
+                            <span>Despesas</span>
+                            <strong>{{ formatarMoeda(dashboard.resumo.despesas) }}</strong>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill expense"
+                                [style.width.%]="percentual(dashboard.resumo.despesas, dashboard.resumo.receitas + dashboard.resumo.despesas)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-panel">
+                <div class="chart-header">
+                    <h2>Gastos por categoria</h2>
+                    <span>Despesas</span>
+                </div>
+
+                @if (dashboard.despesasPorCategoria.length) {
+                    <div class="category-chart">
+                        @for (despesa of dashboard.despesasPorCategoria; track despesa.categoria) {
+                            <div class="category-row">
+                                <div class="category-label">
+                                    <span>{{ despesa.categoria }}</span>
+                                    <strong>{{ formatarMoeda(despesa.valor) }}</strong>
+                                </div>
+                                <div class="bar-track">
+                                    <div class="bar-fill category"
+                                        [style.width.%]="percentual(despesa.valor, maiorDespesaCategoria(dashboard.despesasPorCategoria))">
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <div class="empty-state">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Nenhuma despesa registrada no mês atual.</span>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+</main>

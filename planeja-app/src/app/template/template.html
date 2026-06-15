@@ -6,17 +6,17 @@
         </div>
 
         <nav class="sidebar-menu">
-            <a class="menu-item active">
+            <a class="menu-item" [routerLink]="['/paginas/dashboard']" routerLinkActive="active">
                 <i class="fa-solid fa-chart-line"></i>
                 <span>Dashboard</span>
             </a>
 
-            <a class="menu-item" [routerLink]="['/paginas/listagem-cartoes']">
-                <i class="fa fa-solid fa-credit-card "></i>
+            <a class="menu-item" [routerLink]="['/paginas/listagem-cartoes']" routerLinkActive="active">
+                <i class="fa fa-solid fa-credit-card"></i>
                 <span>Cartões</span>
             </a>
 
-            <a class="menu-item" [routerLink]="['/paginas/listagem-categorias']">
+            <a class="menu-item" [routerLink]="['/paginas/listagem-categorias']" routerLinkActive="active">
                 <i class="fa fa-solid fa-icons"></i>
                 <span>Categorias</span>
             </a>
@@ -26,5 +26,4 @@
     <div class="main-content">
         <router-outlet></router-outlet>
     </div>
-
 </div>
