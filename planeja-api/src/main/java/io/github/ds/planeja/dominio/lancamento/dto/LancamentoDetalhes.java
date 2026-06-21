@@ -8,6 +8,7 @@ import java.time.LocalDate;
 public record LancamentoDetalhes(
         String id,
         LocalDate data,
+        String descricao,
         BigDecimal valor,
         TipoLancamento tipo,
         String categoriaId,

@@ -1,5 +1,6 @@
 package io.github.ds.planeja.dominio.lancamento;
 
+import io.github.ds.planeja.common.exceptions.RegistroNaoEncontradoException;
 import io.github.ds.planeja.common.exceptions.ValidationException;
 import io.github.ds.planeja.dominio.cartao.CartaoRepository;
 import io.github.ds.planeja.dominio.cartao.model.CartaoEntity;
@@ -80,5 +81,11 @@ public class LancamentoService {
         var resultado = repository.findAll(spec, pageRequest);
 
         return resultado.map(mapper::toDetalhes);
+    }
+
+    public void deletar(UUID id){
+        var lancamento = repository.findById(id)
+                .orElseThrow(RegistroNaoEncontradoException::new);
+        repository.delete(lancamento);
     }
 }
