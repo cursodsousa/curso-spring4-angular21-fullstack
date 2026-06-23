@@ -234,3 +234,653 @@ Caused by: org.h2.jdbc.JdbcSQLInvalidAuthorizationSpecException: Wrong user name
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:522)
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
 	... 45 more
+2026-06-22 21:38:14.345242-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLDataException: Cannot parse "INTERVAL" constant "1 month"; SQL statement:
+-- Cuidado: descomente somente se quiser apagar os lançamentos existentes de 2026.
+-- DELETE FROM lancamentos
+-- WHERE data >= DATE '2026-01-01'
+--   AND data <  DATE '2027-01-01';
+
+WITH meses AS (
+    SELECT data_mes::date AS mes
+    FROM generate_series(
+        DATE '2026-01-01',
+        DATE '2026-12-01',
+        INTERVAL '1 month'
+    ) AS data_mes
+),
+dias AS (
+    SELECT *
+    FROM unnest(
+        ARRAY[2, 5, 8, 11, 14, 17, 20, 23, 26, 28]
+    ) WITH ORDINALITY AS d(dia, ordem)
+),
+cartoes AS (
+    SELECT ARRAY[
+        '79e0176d-b236-4e2b-ba6f-a357b97fcac0'::uuid, -- Nubank Platinum
+        'e31bf084-359c-4d7a-9dfb-0a19296b0ce8'::uuid, -- Rabobank
+        '571389e7-eb42-430d-bd55-99147787f914'::uuid, -- Itaú Personnalité
+        '9efe71e2-417c-4b9a-a0e5-ad58ac36ae4f'::uuid, -- Cartão Nubank
+        '0e9c6ee6-42a5-4ba8-9bc2-d97206eeebbc'::uuid, -- Bradescard
+        '59103919-b7a1-4466-a356-d400c344387c'::uuid, -- Banco XPTO
+        'd03fadb7-4c6d-42a6-a9db-2d4a1c863aec'::uuid  -- BB Card
+    ] AS ids
+),
+base AS (
+    SELECT
+        m.mes,
+        d.dia,
+        d.ordem,
+        EXTRACT(MONTH FROM m.mes)::integer AS numero_mes,
+        CASE
+            WHEN d.ordem IN (1, 2) THEN 'RECEITA'
+            ELSE 'DESPESA'
+        END AS tipo
+    FROM meses m
+    CROSS JOIN dias d
+)
+INSERT INTO lancamentos (
+    id,
+    data,
+    tipo,
+    valor,
+    cartao_id,
+    categoria_id,
+    descricao
+)
+SELECT
+    gen_random_uuid(),
+
+    make_date(
+        2026,
+        b.numero_mes,
+        b.dia
+    ) AS data,
+
+    b.tipo,
+
+    CASE b.ordem
+        -- Receitas
+        WHEN 1 THEN 6000.00 + (b.numero_mes * 25.00)
+        WHEN 2 THEN 300.00  + (b.numero_mes * 35.00)
+
+        -- Despesas
+        WHEN 3 THEN 180.90 + (b.numero_mes * 7.00)
+        WHEN 4 THEN 110.00 + (b.numero_mes * 4.00)
+        WHEN 5 THEN 85.50  + (b.numero_mes * 6.00)
+        WHEN 6 THEN 65.90  + (b.numero_mes * 3.00)
+        WHEN 7 THEN 42.00  + (b.numero_mes * 2.00)
+        WHEN 8 THEN 150.00 + (b.numero_mes * 8.00)
+        WHEN 9 THEN 320.00 + (b.numero_mes * 5.00)
+        WHEN 10 THEN 210.00 + (b.numero_mes * 4.00)
+    END::numeric(15, 2) AS valor,
+
+    CASE
+        -- Receitas nunca possuem cartão.
+        -- Os lançamentos 7 e 8 simulam despesas pagas sem cartão.
+        WHEN b.tipo = 'DESPESA'
+             AND b.ordem NOT IN (7, 8)
+        THEN c.ids[
+            (
+                (
+                    b.numero_mes
+                    + b.ordem::integer
+                    - 2
+                ) % 7
+            ) + 1
+        ]
+        ELSE NULL::uuid
+    END AS cartao_id,
+
+    CASE b.ordem
+        WHEN 1 THEN 'cc9e3e41-0067-4401-b94e-35187f0671d2'::uuid -- Salário
+        WHEN 2 THEN '3078af8b-11d4-44c5-990b-06a19bc3c7e8'::uuid -- Renda Extra
+
+        WHEN 3 THEN '9bb81874-5725-4a79-9c8b-82902c668965'::uuid -- Alimentação
+        WHEN 4 THEN 'dce30174-4d6d-4b00-9486-eb3e7190e5bb'::uuid -- Transporte
+        WHEN 5 THEN 'acf29d5a-579f-483b-9743-02d0d2604eb8'::uuid -- Saúde
+        WHEN 6 THEN '9bb81874-5725-4a79-9c8b-82902c668965'::uuid -- Alimentação
+        WHEN 7 THEN 'dce30174-4d6d-4b00-9486-eb3e7190e5bb'::uuid -- Transporte
+        WHEN 8 THEN 'acf29d5a-579f-483b-9743-02d0d2604eb8'::uuid -- Saúde
+        WHEN 9 THEN '9bb81874-5725-4a79-9c8b-82902c668965'::uuid -- Alimentação
+        WHEN 10 THEN 'acf29d5a-579f-483b-9743-02d0d2604eb8'::uuid -- Saúde
+    END AS categoria_id,
+
+    CASE b.ordem
+        WHEN 1 THEN 'Salário mensal - ' || to_char(b.mes, 'MM/YYYY')
+        WHEN 2 THEN 'Serviço freelance - ' || to_char(b.mes, 'MM/YYYY')
+        WHEN 3 THEN 'Compra no supermercado'
+        WHEN 4 THEN 'Abastecimento do veículo'
+        WHEN 5 THEN 'Compra na farmácia'
+        WHEN 6 THEN 'Almoço em restaurante'
+        WHEN 7 THEN 'Transporte por aplicativo'
+        WHEN 8 THEN 'Consulta ou exame médico'
+        WHEN 9 THEN 'Compras de alimentação do mês'
+        WHEN 10 THEN 'Plano de saúde'
+    END AS descricao
+
+FROM base b
+CROSS JOIN cartoes c
+ORDER BY b.mes, b.ordem [22007-240]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:518)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:212)
+	at org.h2.command.Parser.readInterval(Parser.java:5384)
+	at org.h2.command.Parser.readTermWithoutIdentifier(Parser.java:4980)
+	at org.h2.command.Parser.readTerm(Parser.java:4844)
+	at org.h2.command.Parser.readFactor(Parser.java:3326)
+	at org.h2.command.Parser.readSum(Parser.java:3313)
+	at org.h2.command.Parser.readConcat(Parser.java:3278)
+	at org.h2.command.Parser.readCondition(Parser.java:3068)
+	at org.h2.command.Parser.readExpression(Parser.java:2988)
+	at org.h2.command.Parser.readTablePrimary(Parser.java:1761)
+	at org.h2.command.Parser.readTableReference(Parser.java:2252)
+	at org.h2.command.Parser.parseSelectFromPart(Parser.java:2705)
+	at org.h2.command.Parser.parseSelect(Parser.java:2813)
+	at org.h2.command.Parser.parseQueryPrimary(Parser.java:2695)
+	at org.h2.command.Parser.parseQueryTerm(Parser.java:2550)
+	at org.h2.command.Parser.parseQueryExpressionBody(Parser.java:2529)
+	at org.h2.command.Parser.parseQueryExpressionBodyAndEndOfQuery(Parser.java:2522)
+	at org.h2.command.Parser.parseQueryExpression(Parser.java:2515)
+	at org.h2.command.Parser.parseQuery(Parser.java:2482)
+	at org.h2.command.Parser.parseSingleCommonTableExpression(Parser.java:7072)
+	at org.h2.command.Parser.parseQueryExpression(Parser.java:2503)
+	at org.h2.command.Parser.parseQuery(Parser.java:2482)
+	at org.h2.command.Parser.parsePrepared(Parser.java:613)
+	at org.h2.command.Parser.parse(Parser.java:584)
+	at org.h2.command.Parser.parse(Parser.java:559)
+	at org.h2.command.Parser.prepareCommand(Parser.java:487)
+	at org.h2.engine.SessionLocal.prepareLocal(SessionLocal.java:647)
+	at org.h2.engine.SessionLocal.prepareCommand(SessionLocal.java:563)
+	at org.h2.jdbc.JdbcConnection.prepareCommand(JdbcConnection.java:1160)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:245)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:231)
+	at org.h2.server.web.WebApp.getResult(WebApp.java:1344)
+	at org.h2.server.web.WebApp.query(WebApp.java:1142)
+	at org.h2.server.web.WebApp.query(WebApp.java:1118)
+	at org.h2.server.web.WebApp.process(WebApp.java:244)
+	at org.h2.server.web.WebApp.processRequest(WebApp.java:176)
+	at org.h2.server.web.JakartaWebServlet.doGet(JakartaWebServlet.java:129)
+	at org.h2.server.web.JakartaWebServlet.doPost(JakartaWebServlet.java:166)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:649)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.h2.value.TypeInfo.getValueType()" because "<local3>" is null
+	at org.h2.command.Parser.readInterval(Parser.java:5378)
+	... 66 more
+2026-06-22 21:38:58.644004-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLDataException: Cannot parse "INTERVAL" constant "1 month"; SQL statement:
+WITH meses AS (
+    SELECT data_mes::date AS mes
+    FROM generate_series(
+        DATE '2026-01-01',
+        DATE '2026-12-01',
+        INTERVAL '1 month'
+    ) AS data_mes
+),
+dias AS (
+    SELECT *
+    FROM unnest(
+        ARRAY[2, 5, 8, 11, 14, 17, 20, 23, 26, 28]
+    ) WITH ORDINALITY AS d(dia, ordem)
+),
+cartoes AS (
+    SELECT ARRAY[
+        '79e0176d-b236-4e2b-ba6f-a357b97fcac0'::uuid, -- Nubank Platinum
+        'e31bf084-359c-4d7a-9dfb-0a19296b0ce8'::uuid, -- Rabobank
+        '571389e7-eb42-430d-bd55-99147787f914'::uuid, -- Itaú Personnalité
+        '9efe71e2-417c-4b9a-a0e5-ad58ac36ae4f'::uuid, -- Cartão Nubank
+        '0e9c6ee6-42a5-4ba8-9bc2-d97206eeebbc'::uuid, -- Bradescard
+        '59103919-b7a1-4466-a356-d400c344387c'::uuid, -- Banco XPTO
+        'd03fadb7-4c6d-42a6-a9db-2d4a1c863aec'::uuid  -- BB Card
+    ] AS ids
+),
+base AS (
+    SELECT
+        m.mes,
+        d.dia,
+        d.ordem,
+        EXTRACT(MONTH FROM m.mes)::integer AS numero_mes,
+        CASE
+            WHEN d.ordem IN (1, 2) THEN 'RECEITA'
+            ELSE 'DESPESA'
+        END AS tipo
+    FROM meses m
+    CROSS JOIN dias d
+)
+INSERT INTO lancamentos (
+    id,
+    data,
+    tipo,
+    valor,
+    cartao_id,
+    categoria_id,
+    descricao
+)
+SELECT
+    gen_random_uuid(),
+
+    make_date(
+        2026,
+        b.numero_mes,
+        b.dia
+    ) AS data,
+
+    b.tipo,
+
+    CASE b.ordem
+        -- Receitas
+        WHEN 1 THEN 6000.00 + (b.numero_mes * 25.00)
+        WHEN 2 THEN 300.00  + (b.numero_mes * 35.00)
+
+        -- Despesas
+        WHEN 3 THEN 180.90 + (b.numero_mes * 7.00)
+        WHEN 4 THEN 110.00 + (b.numero_mes * 4.00)
+        WHEN 5 THEN 85.50  + (b.numero_mes * 6.00)
+        WHEN 6 THEN 65.90  + (b.numero_mes * 3.00)
+        WHEN 7 THEN 42.00  + (b.numero_mes * 2.00)
+        WHEN 8 THEN 150.00 + (b.numero_mes * 8.00)
+        WHEN 9 THEN 320.00 + (b.numero_mes * 5.00)
+        WHEN 10 THEN 210.00 + (b.numero_mes * 4.00)
+    END::numeric(15, 2) AS valor,
+
+    CASE
+        -- Receitas nunca possuem cartão.
+        -- Os lançamentos 7 e 8 simulam despesas pagas sem cartão.
+        WHEN b.tipo = 'DESPESA'
+             AND b.ordem NOT IN (7, 8)
+        THEN c.ids[
+            (
+                (
+                    b.numero_mes
+                    + b.ordem::integer
+                    - 2
+                ) % 7
+            ) + 1
+        ]
+        ELSE NULL::uuid
+    END AS cartao_id,
+
+    CASE b.ordem
+        WHEN 1 THEN 'cc9e3e41-0067-4401-b94e-35187f0671d2'::uuid -- Salário
+        WHEN 2 THEN '3078af8b-11d4-44c5-990b-06a19bc3c7e8'::uuid -- Renda Extra
+
+        WHEN 3 THEN '9bb81874-5725-4a79-9c8b-82902c668965'::uuid -- Alimentação
+        WHEN 4 THEN 'dce30174-4d6d-4b00-9486-eb3e7190e5bb'::uuid -- Transporte
+        WHEN 5 THEN 'acf29d5a-579f-483b-9743-02d0d2604eb8'::uuid -- Saúde
+        WHEN 6 THEN '9bb81874-5725-4a79-9c8b-82902c668965'::uuid -- Alimentação
+        WHEN 7 THEN 'dce30174-4d6d-4b00-9486-eb3e7190e5bb'::uuid -- Transporte
+        WHEN 8 THEN 'acf29d5a-579f-483b-9743-02d0d2604eb8'::uuid -- Saúde
+        WHEN 9 THEN '9bb81874-5725-4a79-9c8b-82902c668965'::uuid -- Alimentação
+        WHEN 10 THEN 'acf29d5a-579f-483b-9743-02d0d2604eb8'::uuid -- Saúde
+    END AS categoria_id,
+
+    CASE b.ordem
+        WHEN 1 THEN 'Salário mensal - ' || to_char(b.mes, 'MM/YYYY')
+        WHEN 2 THEN 'Serviço freelance - ' || to_char(b.mes, 'MM/YYYY')
+        WHEN 3 THEN 'Compra no supermercado'
+        WHEN 4 THEN 'Abastecimento do veículo'
+        WHEN 5 THEN 'Compra na farmácia'
+        WHEN 6 THEN 'Almoço em restaurante'
+        WHEN 7 THEN 'Transporte por aplicativo'
+        WHEN 8 THEN 'Consulta ou exame médico'
+        WHEN 9 THEN 'Compras de alimentação do mês'
+        WHEN 10 THEN 'Plano de saúde'
+    END AS descricao
+
+FROM base b
+CROSS JOIN cartoes c
+ORDER BY b.mes, b.ordem [22007-240]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:518)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:212)
+	at org.h2.command.Parser.readInterval(Parser.java:5384)
+	at org.h2.command.Parser.readTermWithoutIdentifier(Parser.java:4980)
+	at org.h2.command.Parser.readTerm(Parser.java:4844)
+	at org.h2.command.Parser.readFactor(Parser.java:3326)
+	at org.h2.command.Parser.readSum(Parser.java:3313)
+	at org.h2.command.Parser.readConcat(Parser.java:3278)
+	at org.h2.command.Parser.readCondition(Parser.java:3068)
+	at org.h2.command.Parser.readExpression(Parser.java:2988)
+	at org.h2.command.Parser.readTablePrimary(Parser.java:1761)
+	at org.h2.command.Parser.readTableReference(Parser.java:2252)
+	at org.h2.command.Parser.parseSelectFromPart(Parser.java:2705)
+	at org.h2.command.Parser.parseSelect(Parser.java:2813)
+	at org.h2.command.Parser.parseQueryPrimary(Parser.java:2695)
+	at org.h2.command.Parser.parseQueryTerm(Parser.java:2550)
+	at org.h2.command.Parser.parseQueryExpressionBody(Parser.java:2529)
+	at org.h2.command.Parser.parseQueryExpressionBodyAndEndOfQuery(Parser.java:2522)
+	at org.h2.command.Parser.parseQueryExpression(Parser.java:2515)
+	at org.h2.command.Parser.parseQuery(Parser.java:2482)
+	at org.h2.command.Parser.parseSingleCommonTableExpression(Parser.java:7072)
+	at org.h2.command.Parser.parseQueryExpression(Parser.java:2503)
+	at org.h2.command.Parser.parseQuery(Parser.java:2482)
+	at org.h2.command.Parser.parsePrepared(Parser.java:613)
+	at org.h2.command.Parser.parse(Parser.java:584)
+	at org.h2.command.Parser.parse(Parser.java:559)
+	at org.h2.command.Parser.prepareCommand(Parser.java:487)
+	at org.h2.engine.SessionLocal.prepareLocal(SessionLocal.java:647)
+	at org.h2.engine.SessionLocal.prepareCommand(SessionLocal.java:563)
+	at org.h2.jdbc.JdbcConnection.prepareCommand(JdbcConnection.java:1160)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:245)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:231)
+	at org.h2.server.web.WebApp.getResult(WebApp.java:1344)
+	at org.h2.server.web.WebApp.query(WebApp.java:1142)
+	at org.h2.server.web.WebApp.query(WebApp.java:1118)
+	at org.h2.server.web.WebApp.process(WebApp.java:244)
+	at org.h2.server.web.WebApp.processRequest(WebApp.java:176)
+	at org.h2.server.web.JakartaWebServlet.doGet(JakartaWebServlet.java:129)
+	at org.h2.server.web.JakartaWebServlet.doPost(JakartaWebServlet.java:166)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:649)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.h2.value.TypeInfo.getValueType()" because "<local3>" is null
+	at org.h2.command.Parser.readInterval(Parser.java:5378)
+	... 66 more
+2026-06-22 21:39:15.160016-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "LANCAMENTOS" not found; SQL statement:
+SELECT
+    to_char(data, 'YYYY-MM') AS mes,
+    COUNT(*) AS quantidade,
+    SUM(CASE WHEN tipo = 'RECEITA' THEN valor ELSE 0 END) AS total_receitas,
+    SUM(CASE WHEN tipo = 'DESPESA' THEN valor ELSE 0 END) AS total_despesas
+FROM lancamentos
+WHERE data >= DATE '2026-01-01'
+  AND data < DATE '2027-01-01'
+GROUP BY to_char(data, 'YYYY-MM')
+ORDER BY mes [42102-240]
+2026-06-22 21:40:11.318621-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLDataException: Cannot parse "INTERVAL" constant "1 month"; SQL statement:
+WITH meses AS (
+    SELECT data_mes::date AS mes
+    FROM generate_series(
+        DATE '2026-01-01',
+        DATE '2026-12-01',
+        INTERVAL '1 month'
+    ) AS data_mes
+),
+dias AS (
+    SELECT *
+    FROM unnest(
+        ARRAY[2, 5, 8, 11, 14, 17, 20, 23, 26, 28]
+    ) WITH ORDINALITY AS d(dia, ordem)
+),
+cartoes AS (
+    SELECT ARRAY[
+        '79e0176d-b236-4e2b-ba6f-a357b97fcac0'::uuid, -- Nubank Platinum
+        'e31bf084-359c-4d7a-9dfb-0a19296b0ce8'::uuid, -- Rabobank
+        '571389e7-eb42-430d-bd55-99147787f914'::uuid, -- Itaú Personnalité
+        '9efe71e2-417c-4b9a-a0e5-ad58ac36ae4f'::uuid, -- Cartão Nubank
+        '0e9c6ee6-42a5-4ba8-9bc2-d97206eeebbc'::uuid, -- Bradescard
+        '59103919-b7a1-4466-a356-d400c344387c'::uuid, -- Banco XPTO
+        'd03fadb7-4c6d-42a6-a9db-2d4a1c863aec'::uuid  -- BB Card
+    ] AS ids
+),
+base AS (
+    SELECT
+        m.mes,
+        d.dia,
+        d.ordem,
+        EXTRACT(MONTH FROM m.mes)::integer AS numero_mes,
+        CASE
+            WHEN d.ordem IN (1, 2) THEN 'RECEITA'
+            ELSE 'DESPESA'
+        END AS tipo
+    FROM meses m
+    CROSS JOIN dias d
+)
+INSERT INTO lancamento (
+    id,
+    data,
+    tipo,
+    valor,
+    cartao_id,
+    categoria_id,
+    descricao
+)
+SELECT
+    gen_random_uuid(),
+
+    make_date(
+        2026,
+        b.numero_mes,
+        b.dia
+    ) AS data,
+
+    b.tipo,
+
+    CASE b.ordem
+        -- Receitas
+        WHEN 1 THEN 6000.00 + (b.numero_mes * 25.00)
+        WHEN 2 THEN 300.00  + (b.numero_mes * 35.00)
+
+        -- Despesas
+        WHEN 3 THEN 180.90 + (b.numero_mes * 7.00)
+        WHEN 4 THEN 110.00 + (b.numero_mes * 4.00)
+        WHEN 5 THEN 85.50  + (b.numero_mes * 6.00)
+        WHEN 6 THEN 65.90  + (b.numero_mes * 3.00)
+        WHEN 7 THEN 42.00  + (b.numero_mes * 2.00)
+        WHEN 8 THEN 150.00 + (b.numero_mes * 8.00)
+        WHEN 9 THEN 320.00 + (b.numero_mes * 5.00)
+        WHEN 10 THEN 210.00 + (b.numero_mes * 4.00)
+    END::numeric(15, 2) AS valor,
+
+    CASE
+        -- Receitas nunca possuem cartão.
+        -- Os lançamentos 7 e 8 simulam despesas pagas sem cartão.
+        WHEN b.tipo = 'DESPESA'
+             AND b.ordem NOT IN (7, 8)
+        THEN c.ids[
+            (
+                (
+                    b.numero_mes
+                    + b.ordem::integer
+                    - 2
+                ) % 7
+            ) + 1
+        ]
+        ELSE NULL::uuid
+    END AS cartao_id,
+
+    CASE b.ordem
+        WHEN 1 THEN 'cc9e3e41-0067-4401-b94e-35187f0671d2'::uuid -- Salário
+        WHEN 2 THEN '3078af8b-11d4-44c5-990b-06a19bc3c7e8'::uuid -- Renda Extra
+
+        WHEN 3 THEN '9bb81874-5725-4a79-9c8b-82902c668965'::uuid -- Alimentação
+        WHEN 4 THEN 'dce30174-4d6d-4b00-9486-eb3e7190e5bb'::uuid -- Transporte
+        WHEN 5 THEN 'acf29d5a-579f-483b-9743-02d0d2604eb8'::uuid -- Saúde
+        WHEN 6 THEN '9bb81874-5725-4a79-9c8b-82902c668965'::uuid -- Alimentação
+        WHEN 7 THEN 'dce30174-4d6d-4b00-9486-eb3e7190e5bb'::uuid -- Transporte
+        WHEN 8 THEN 'acf29d5a-579f-483b-9743-02d0d2604eb8'::uuid -- Saúde
+        WHEN 9 THEN '9bb81874-5725-4a79-9c8b-82902c668965'::uuid -- Alimentação
+        WHEN 10 THEN 'acf29d5a-579f-483b-9743-02d0d2604eb8'::uuid -- Saúde
+    END AS categoria_id,
+
+    CASE b.ordem
+        WHEN 1 THEN 'Salário mensal - ' || to_char(b.mes, 'MM/YYYY')
+        WHEN 2 THEN 'Serviço freelance - ' || to_char(b.mes, 'MM/YYYY')
+        WHEN 3 THEN 'Compra no supermercado'
+        WHEN 4 THEN 'Abastecimento do veículo'
+        WHEN 5 THEN 'Compra na farmácia'
+        WHEN 6 THEN 'Almoço em restaurante'
+        WHEN 7 THEN 'Transporte por aplicativo'
+        WHEN 8 THEN 'Consulta ou exame médico'
+        WHEN 9 THEN 'Compras de alimentação do mês'
+        WHEN 10 THEN 'Plano de saúde'
+    END AS descricao
+
+FROM base b
+CROSS JOIN cartoes c
+ORDER BY b.mes, b.ordem [22007-240]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:518)
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
+	at org.h2.message.DbException.get(DbException.java:212)
+	at org.h2.command.Parser.readInterval(Parser.java:5384)
+	at org.h2.command.Parser.readTermWithoutIdentifier(Parser.java:4980)
+	at org.h2.command.Parser.readTerm(Parser.java:4844)
+	at org.h2.command.Parser.readFactor(Parser.java:3326)
+	at org.h2.command.Parser.readSum(Parser.java:3313)
+	at org.h2.command.Parser.readConcat(Parser.java:3278)
+	at org.h2.command.Parser.readCondition(Parser.java:3068)
+	at org.h2.command.Parser.readExpression(Parser.java:2988)
+	at org.h2.command.Parser.readTablePrimary(Parser.java:1761)
+	at org.h2.command.Parser.readTableReference(Parser.java:2252)
+	at org.h2.command.Parser.parseSelectFromPart(Parser.java:2705)
+	at org.h2.command.Parser.parseSelect(Parser.java:2813)
+	at org.h2.command.Parser.parseQueryPrimary(Parser.java:2695)
+	at org.h2.command.Parser.parseQueryTerm(Parser.java:2550)
+	at org.h2.command.Parser.parseQueryExpressionBody(Parser.java:2529)
+	at org.h2.command.Parser.parseQueryExpressionBodyAndEndOfQuery(Parser.java:2522)
+	at org.h2.command.Parser.parseQueryExpression(Parser.java:2515)
+	at org.h2.command.Parser.parseQuery(Parser.java:2482)
+	at org.h2.command.Parser.parseSingleCommonTableExpression(Parser.java:7072)
+	at org.h2.command.Parser.parseQueryExpression(Parser.java:2503)
+	at org.h2.command.Parser.parseQuery(Parser.java:2482)
+	at org.h2.command.Parser.parsePrepared(Parser.java:613)
+	at org.h2.command.Parser.parse(Parser.java:584)
+	at org.h2.command.Parser.parse(Parser.java:559)
+	at org.h2.command.Parser.prepareCommand(Parser.java:487)
+	at org.h2.engine.SessionLocal.prepareLocal(SessionLocal.java:647)
+	at org.h2.engine.SessionLocal.prepareCommand(SessionLocal.java:563)
+	at org.h2.jdbc.JdbcConnection.prepareCommand(JdbcConnection.java:1160)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:245)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:231)
+	at org.h2.server.web.WebApp.getResult(WebApp.java:1344)
+	at org.h2.server.web.WebApp.query(WebApp.java:1142)
+	at org.h2.server.web.WebApp.query(WebApp.java:1118)
+	at org.h2.server.web.WebApp.process(WebApp.java:244)
+	at org.h2.server.web.WebApp.processRequest(WebApp.java:176)
+	at org.h2.server.web.JakartaWebServlet.doGet(JakartaWebServlet.java:129)
+	at org.h2.server.web.JakartaWebServlet.doPost(JakartaWebServlet.java:166)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:649)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:710)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:128)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:53)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:199)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:107)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:77)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:113)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:83)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:72)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:341)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1778)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:946)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:480)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:57)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+Caused by: java.lang.NullPointerException: Cannot invoke "org.h2.value.TypeInfo.getValueType()" because "<local3>" is null
+	at org.h2.command.Parser.readInterval(Parser.java:5378)
+	... 66 more
+2026-06-22 21:40:47.598949-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "LANCAMENTOS" not found; SQL statement:
+INSERT INTO lancamentos
+(id, data, tipo, valor, cartao_id, categoria_id, descricao)
+VALUES
+(RANDOM_UUID(), DATE '2026-01-05', 'RECEITA', 6000.00, NULL, 'cc9e3e41-0067-4401-b94e-35187f0671d2', 'Salário de janeiro'),
+(RANDOM_UUID(), DATE '2026-01-10', 'RECEITA', 450.00, NULL, '3078af8b-11d4-44c5-990b-06a19bc3c7e8', 'Serviço freelance'),
+(RANDOM_UUID(), DATE '2026-01-03', 'DESPESA', 185.90, '79e0176d-b236-4e2b-ba6f-a357b97fcac0', '9bb81874-5725-4a79-9c8b-82902c668965', 'Compras no supermercado'),
+(RANDOM_UUID(), DATE '2026-01-07', 'DESPESA', 120.00, 'e31bf084-359c-4d7a-9dfb-0a19296b0ce8', 'dce30174-4d6d-4b00-9486-eb3e7190e5bb', 'Abastecimento'),
+(RANDOM_UUID(), DATE '2026-01-12', 'DESPESA', 65.50, '571389e7-eb42-430d-bd55-99147787f914', 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Compra na farmácia'),
+(RANDOM_UUID(), DATE '2026-01-15', 'DESPESA', 89.90, '9efe71e2-417c-4b9a-a0e5-ad58ac36ae4f', '9bb81874-5725-4a79-9c8b-82902c668965', 'Restaurante'),
+(RANDOM_UUID(), DATE '2026-01-18', 'DESPESA', 42.00, NULL, 'dce30174-4d6d-4b00-9486-eb3e7190e5bb', 'Transporte por aplicativo'),
+(RANDOM_UUID(), DATE '2026-01-21', 'DESPESA', 250.00, NULL, 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Consulta médica'),
+(RANDOM_UUID(), DATE '2026-01-25', 'DESPESA', 310.40, '0e9c6ee6-42a5-4ba8-9bc2-d97206eeebbc', '9bb81874-5725-4a79-9c8b-82902c668965', 'Compras mensais'),
+(RANDOM_UUID(), DATE '2026-01-28', 'DESPESA', 220.00, '59103919-b7a1-4466-a356-d400c344387c', 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Plano de saúde') [42102-240]
+2026-06-22 21:41:03.733759-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "INSERT INTO lancamento\000d\000a(id, data, tipo, valor, cartao_id, categoria_id, descricao)\000d\000aVALUES\000d\000a(RANDOM_UUID(), DATE '2026-02-05', 'RECEITA', 6000.00, NULL, 'cc9e3e41-0067-4401-b94e-35187f0671d2', 'Salário de fevereiro'),\000d\000a(RANDOM_UUID(), DATE '2026-02-11', 'RECEITA', 520.00, NULL, '3078af8b-11d4-44c5-990b-06a19bc3c7e8', 'Desenvolvimento de sistema'),\000d\000a(RANDOM_UUID(), DATE '2026-02-02', 'DESPESA', 210.30, 'e31bf084-359c-4d7a-9dfb-0a19296b0ce8', '9bb81874-5725-4a79-9c8b-82902c668965', 'Supermercado'),\000d\000a(RANDOM_UUID(), DATE '2026-02-07', 'DESPESA', 135.00, '571389e7-eb42-430d-bd55-99147787f914', 'dce30174-4d6d-4b00-9486-eb3e7190e5bb', 'Combustível'),\000d\000a(RANDOM_UUID(), DATE '2026-02-10', 'DESPESA', 78.90, '9efe71e2-417c-4b9a-a0e5-ad58ac36ae4f', 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Medicamentos'),\000d\000a(RANDOM_UUID(), DATE '2026-02-14', 'DESPESA', 105.00, '0e9c6ee6-42a5-4ba8-9bc2-d97206eeebbc', '9bb81874-5725-4a79-9c8b-82902c668965', 'Jantar'),\000d\000a(RANDOM_UUID(), DATE '2026-02-17', 'DESPESA', 38.50, NULL, 'dce30174-4d6d-4b00-9486-eb3e7190e5bb', 'Corrida por aplicativo'),\000d\000a(RANDOM_UUID(), DATE '2026-02-20', 'DESPESA', 180.00, NULL, 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Exame médico'),\000d\000a(RANDOM_UUID(), DATE '2026-02-24', 'DESPESA', 295.80, '59103919-b7a1-4466-a356-d400c344387c', '9bb81874-5725-4a79-9c8b-82902c668965', 'Compras para casa'),\000d\000a(R[*]"; expected "(, ., [, ., ::, AT, FORMAT, *, /, %, +, -, ||, NOT, IS, ILIKE, REGEXP, AND, OR, ,, )"; SQL statement:
+INSERT INTO lancamento
+(id, data, tipo, valor, cartao_id, categoria_id, descricao)
+VALUES
+(RANDOM_UUID(), DATE '2026-02-05', 'RECEITA', 6000.00, NULL, 'cc9e3e41-0067-4401-b94e-35187f0671d2', 'Salário de fevereiro'),
+(RANDOM_UUID(), DATE '2026-02-11', 'RECEITA', 520.00, NULL, '3078af8b-11d4-44c5-990b-06a19bc3c7e8', 'Desenvolvimento de sistema'),
+(RANDOM_UUID(), DATE '2026-02-02', 'DESPESA', 210.30, 'e31bf084-359c-4d7a-9dfb-0a19296b0ce8', '9bb81874-5725-4a79-9c8b-82902c668965', 'Supermercado'),
+(RANDOM_UUID(), DATE '2026-02-07', 'DESPESA', 135.00, '571389e7-eb42-430d-bd55-99147787f914', 'dce30174-4d6d-4b00-9486-eb3e7190e5bb', 'Combustível'),
+(RANDOM_UUID(), DATE '2026-02-10', 'DESPESA', 78.90, '9efe71e2-417c-4b9a-a0e5-ad58ac36ae4f', 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Medicamentos'),
+(RANDOM_UUID(), DATE '2026-02-14', 'DESPESA', 105.00, '0e9c6ee6-42a5-4ba8-9bc2-d97206eeebbc', '9bb81874-5725-4a79-9c8b-82902c668965', 'Jantar'),
+(RANDOM_UUID(), DATE '2026-02-17', 'DESPESA', 38.50, NULL, 'dce30174-4d6d-4b00-9486-eb3e7190e5bb', 'Corrida por aplicativo'),
+(RANDOM_UUID(), DATE '2026-02-20', 'DESPESA', 180.00, NULL, 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Exame médico'),
+(RANDOM_UUID(), DATE '2026-02-24', 'DESPESA', 295.80, '59103919-b7a1-4466-a356-d400c344387c', '9bb81874-5725-4a79-9c8b-82902c668965', 'Compras para casa'),
+(R [42001-240]
+2026-06-22 21:41:32.944316-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "LANCAMENTOS" not found; SQL statement:
+INSERT INTO lancamentos
+(id, data, tipo, valor, cartao_id, categoria_id, descricao)
+VALUES
+(RANDOM_UUID(), DATE '2026-04-05', 'RECEITA', 6100.00, NULL, 'cc9e3e41-0067-4401-b94e-35187f0671d2', 'Salário de abril'),
+(RANDOM_UUID(), DATE '2026-04-12', 'RECEITA', 680.00, NULL, '3078af8b-11d4-44c5-990b-06a19bc3c7e8', 'Projeto freelance'),
+(RANDOM_UUID(), DATE '2026-04-03', 'DESPESA', 198.60, '9efe71e2-417c-4b9a-a0e5-ad58ac36ae4f', '9bb81874-5725-4a79-9c8b-82902c668965', 'Compras no supermercado'),
+(RANDOM_UUID(), DATE '2026-04-07', 'DESPESA', 145.00, '0e9c6ee6-42a5-4ba8-9bc2-d97206eeebbc', 'dce30174-4d6d-4b00-9486-eb3e7190e5bb', 'Combustível'),
+(RANDOM_UUID(), DATE '2026-04-10', 'DESPESA', 55.40, '59103919-b7a1-4466-a356-d400c344387c', 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Medicamentos'),
+(RANDOM_UUID(), DATE '2026-04-14', 'DESPESA', 115.00, 'd03fadb7-4c6d-42a6-a9db-2d4a1c863aec', '9bb81874-5725-4a79-9c8b-82902c668965', 'Restaurante'),
+(RANDOM_UUID(), DATE '2026-04-17', 'DESPESA', 46.00, NULL, 'dce30174-4d6d-4b00-9486-eb3e7190e5bb', 'Transporte por aplicativo'),
+(RANDOM_UUID(), DATE '2026-04-21', 'DESPESA', 160.00, NULL, 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Exame laboratorial'),
+(RANDOM_UUID(), DATE '2026-04-25', 'DESPESA', 345.90, '79e0176d-b236-4e2b-ba6f-a357b97fcac0', '9bb81874-5725-4a79-9c8b-82902c668965', 'Compras para casa'),
+(RANDOM_UUID(), DATE '2026-04-28', 'DESPESA', 225.00, 'e31bf084-359c-4d7a-9dfb-0a19296b0ce8', 'acf29d5a-579f-483b-9743-02d0d2604eb8', 'Plano de saúde') [42102-240]
