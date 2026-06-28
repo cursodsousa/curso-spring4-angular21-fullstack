@@ -6,12 +6,22 @@ import { ListagemCategorias } from './categorias/listagem-categorias/listagem-ca
 import { CadastroCategoria } from './categorias/cadastro-categoria/cadastro-categoria';
 import { CadastroLancamento } from './lancamentos/cadastro-lancamento/cadastro-lancamento';
 import { ListagemLancamentos } from './lancamentos/listagem-lancamentos/listagem-lancamentos';
+import { DashboardPage } from './dashboard/dashboard-page/dashboard-page';
 
 export const routes: Routes = [
     {
         path: 'paginas',
         component: Template,
         children: [
+            {
+                path: '',
+                redirectTo: 'dashboard',
+                pathMatch: 'full'
+            },
+            {
+                path: 'dashboard',
+                component: DashboardPage
+            },
             {
                 path: 'cadastro-cartoes',
                 component: CadastroCartao
