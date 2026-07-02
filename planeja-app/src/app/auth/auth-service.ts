@@ -2,7 +2,12 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import { jwtDecode } from 'jwt-decode';
 import { AuthResponse, CadastroUsuarioForm, LoginForm } from './dados-auth';
+
+interface JwtPayloadComExp {
+  exp?: number;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -97,9 +102,8 @@ export class AuthService {
     }
 
     try {
-      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-      const payload = JSON.parse(atob(base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=')));
-      return payload.exp;
+      const payload = jwtDecode<JwtPayloadComExp>(token);
+      return payload.exp ?? null;
     } catch {
       return null;
     }
