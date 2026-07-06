@@ -3,6 +3,7 @@ package io.github.ds.planeja.dominio.usuario;
 import io.github.ds.planeja.dominio.usuario.dto.AuthResponse;
 import io.github.ds.planeja.dominio.usuario.dto.LoginForm;
 import io.github.ds.planeja.dominio.usuario.dto.UsuarioCadastroForm;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;

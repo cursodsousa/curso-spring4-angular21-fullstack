@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { AuthService } from '../auth-service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { CadastroUsuarioForm, LoginForm } from '../dados-auth';
 
 interface AuthForm {
   nome: FormControl<string>;
@@ -47,6 +48,45 @@ export class Login implements OnInit {
   }
 
   handleSubmit() : void {
-    console.log(this.form.value);
+    if(this.form.invalid){
+      this.form.markAllAsTouched();
+      this.toast.error('Verifique os dados informados.');
+      return;
+    }
+
+    if(this.modo === 'cadastro'){
+      const dadosCadastro = this.form.value as CadastroUsuarioForm;
+      this.authService.cadastrar(dadosCadastro).subscribe({
+        next: () => this.onAuthSuccess(),
+        error: response => this.onAuthError(response)
+      });
+      return;
+    }
+
+    const dadosLogin = this.form.value as LoginForm;
+    this.authService.login(dadosLogin).subscribe({
+      next: () => this.onAuthSuccess(),
+      error: response => this.onAuthError(response)
+    });
+  }
+
+  onAuthSuccess(): void {
+    this.router.navigate(['/paginas/dashboard']);
+  }
+
+  onAuthError(response: any) : void {
+    // unauthorized
+    if(response.status === 401){
+      this.toast.error('Login ou senha inválidos.');
+      return;
+    }
+
+    // validation
+    if(response.status === 422){
+      this.toast.error('Verifique os dados informados.');
+      return;
+    }
+
+    this.toast.error('Ocorreu um erro ao autenticar.');
   }
 }
