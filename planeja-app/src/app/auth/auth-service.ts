@@ -120,4 +120,22 @@ export class AuthService {
       return null;
     }
   }
+
+  getNomeUsuarioLogado(){
+    //return localStorage.getItem(this.nome_usuario_key);
+    const token = this.getToken();
+    if(!token){
+      return null;
+    }
+
+    try {
+      const payload = jwtDecode<JwtPayload>(token);
+      if(!payload.exp){
+        return null;
+      }
+      return payload.nome;
+    } catch {
+      return null;
+    }
+  }
 }

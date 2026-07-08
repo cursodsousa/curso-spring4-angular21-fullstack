@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterModule, RouterOutlet } from '@angular/router';
+import { AuthService } from '../auth/auth-service';
 
 @Component({
   selector: 'app-template',
@@ -7,4 +8,10 @@ import { RouterModule, RouterOutlet } from '@angular/router';
   templateUrl: './template.html',
   styleUrl: './template.scss'
 })
-export class Template {}
+export class Template {
+  authService = inject(AuthService);
+
+  sair(){
+    this.authService.logout(true);
+  }
+}

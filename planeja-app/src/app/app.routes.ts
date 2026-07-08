@@ -8,11 +8,12 @@ import { CadastroLancamento } from './lancamentos/cadastro-lancamento/cadastro-l
 import { ListagemLancamentos } from './lancamentos/listagem-lancamentos/listagem-lancamentos';
 import { DashboardPage } from './dashboard/dashboard-page/dashboard-page';
 import { Login } from './auth/login/login';
+import { authGuard } from './auth/auth-guard';
 
 export const routes: Routes = [
     {
         path: 'login',
-        component: Login
+        component: Login,
     },
     {
         path: '',
@@ -22,6 +23,7 @@ export const routes: Routes = [
     {
         path: 'paginas',
         component: Template,
+        canActivate: [authGuard],
         children: [
             {
                 path: '',

@@ -33,6 +33,10 @@ export class Login implements OnInit {
       login: new FormControl<string>('', { nonNullable: true, validators: Validators.required}),
       senha: new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.min(6)]}),
     });
+
+    if(this.authService.isAutenticado()){
+      this.router.navigate(['/paginas/dashboard']);
+    }
   }
 
   alterarModo(modo: 'login' | 'cadastro') : void {
