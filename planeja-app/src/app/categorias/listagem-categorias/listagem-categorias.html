@@ -22,22 +22,22 @@
 
                     <tbody>
 
-                        @for( cartao of listagem.content; track cartao.id ){
+                        @for( categoria of listagem.content; track categoria.id ){
                             <tr>
-                                <td> {{ cartao.nome }} </td>
+                                <td> {{ categoria.nome }} </td>
                                 <td>
                                     <span class="badge" 
-                                        [ngClass]="cartao.ativo ? 'badge-success' : 'badge-warning'">
-                                        {{ cartao.ativo ? 'Ativo' : 'Inativo' }}
+                                        [ngClass]="categoria.ativo ? 'badge-success' : 'badge-warning'">
+                                        {{ categoria.ativo ? 'Ativo' : 'Inativo' }}
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     <button class="icon-btn"
-                                        [ngClass]="cartao.ativo ? 'danger': 'success'"
-                                        [attr.title]="cartao.ativo ? 'Desativar' : 'Ativar' "
-                                        (click)="mudarStatus(cartao.id)">
+                                        [ngClass]="categoria.ativo ? 'danger': 'success'"
+                                        [attr.title]="categoria.ativo ? 'Desativar' : 'Ativar' "
+                                        (click)="mudarStatus(categoria.id)">
                                         <i class="fa-solid" 
-                                           [ngClass]="cartao.ativo ? 'fa-ban' : 'fa-check' ">
+                                           [ngClass]="categoria.ativo ? 'fa-ban' : 'fa-check' ">
                                         </i>
                                     </button>
                                 </td>
